@@ -34,6 +34,9 @@ public class GameScreen implements Screen {
     Rectangle bucketRectangle;
     Rectangle dropRectangle;
     int dropsGathered;
+    //Variables para la derrota GameOver
+    int misses;
+    int maxMisses = 5;
 
     public GameScreen(final Drop game){
         this.game = game;
@@ -58,6 +61,8 @@ public class GameScreen implements Screen {
         dropRectangle = new Rectangle();
 
         dropSprites = new Array<>();
+
+
     }
 
     @Override
@@ -110,8 +115,25 @@ public class GameScreen implements Screen {
             dropSprite.translateY(-2f*delta);
             dropRectangle.set(dropSprite.getX(), dropSprite.getY(), dropWidth, dropHeight);
 
+            /*
             if(dropSprite.getY() < -dropHeight) dropSprites.removeIndex(i);
             else if (bucketRectangle.overlaps(dropRectangle)){
+                dropsGathered++;
+                dropSprites.removeIndex(i);
+                dropSound.play();
+            }
+             */
+            if(dropSprite.getY() < -dropHeight){
+                dropSprites.removeIndex(i);
+                misses++;
+
+                if(misses >= maxMisses){
+                    game.setScreen(new GameOverScreen(game, dropsGathered));
+                    dispose();
+                    return;
+                }
+            }
+            else if(bucketRectangle.overlaps(dropRectangle)) {
                 dropsGathered++;
                 dropSprites.removeIndex(i);
                 dropSound.play();
@@ -139,7 +161,8 @@ public class GameScreen implements Screen {
         game.batch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
         bucketSprite.draw(game.batch);
 
-        game.font.draw(game.batch, "Drops collected: " + dropsGathered, 0, worldHeight);
+        game.font.draw(game.batch, "Gotas recogidas: " + dropsGathered, 0, worldHeight);
+        game.font.draw(game.batch, "Fallos: "+ misses+ " de " + maxMisses, 0, worldHeight - 0.5f);
 
         for (Sprite dropSprite : dropSprites){
             dropSprite.draw(game.batch);
