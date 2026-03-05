@@ -19,48 +19,57 @@ public class GameScreen implements Screen {
     final Drop game;
     //Texturas
     Texture backgroundTexture;
-    Texture bucketTexture;
+    Texture potTexture;
     Texture dropTexture;
+    Texture flameTexture;
     //Sonidos
     Sound dropSound;
+    Sound flameSound;
     Music music;
 
     //Sprites
-    Sprite bucketSprite;
+    Sprite potSprite;
     Vector2 touchPos;
     Array<Sprite> dropSprites;
+    Array<Sprite> flameSprites;
     //Miscelánea
     float dropTimer;
-    Rectangle bucketRectangle;
+    float flameTimer;
+    Rectangle potRectangle;
     Rectangle dropRectangle;
+    Rectangle flameRectangle;
     int dropsGathered;
     //Variables para la derrota GameOver
-    int misses;
-    int maxMisses = 5;
+    int hits;
+    int maxHits = 5;
 
     public GameScreen(final Drop game){
         this.game = game;
 
         //Cargar imágenes para el fondo, el cubo y la gota
-        backgroundTexture = new Texture("background.png");
-        bucketTexture = new Texture("bucket.png");
-        dropTexture = new Texture("drop.png");
+        backgroundTexture = new Texture("background2.jpeg");
+        potTexture = new Texture("potty.png");
+        dropTexture = new Texture("drops.png");
+        flameTexture = new Texture("flames.png");
 
         //Cargamos los sonidos y musica
         dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.mp3"));
+        flameSound = Gdx.audio.newSound(Gdx.files.internal("flame.mp3"));
         music = Gdx.audio.newMusic(Gdx.files.internal("music.mp3"));
         music.setLooping(true);
         music.setVolume(0.5f);
 
-        bucketSprite = new Sprite(bucketTexture);
-        bucketSprite.setSize(1, 1);
+        potSprite = new Sprite(potTexture);
+        potSprite.setSize(0.75f, 1);
 
         touchPos = new Vector2();
 
-        bucketRectangle = new Rectangle();
+        potRectangle = new Rectangle();
         dropRectangle = new Rectangle();
+        flameRectangle = new Rectangle();
 
         dropSprites = new Array<>();
+        flameSprites = new Array<>();
 
 
     }
@@ -84,28 +93,28 @@ public class GameScreen implements Screen {
         float delta = Gdx.graphics.getDeltaTime();
 
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
-            bucketSprite.translateX(speed*delta);
+            potSprite.translateX(speed*delta);
         }
         else if(Gdx.input.isKeyPressed(Input.Keys.LEFT)){
-           bucketSprite.translateX(-speed*delta);
+           potSprite.translateX(-speed*delta);
         }
 
         if(Gdx.input.isTouched()){
             touchPos.set(Gdx.input.getX(), Gdx.input.getY());
             game.viewport.unproject(touchPos);
-            bucketSprite.setCenterX(touchPos.x);
+            potSprite.setCenterX(touchPos.x);
         }
     }
 
     private void logic(){
         float worldWidth = game.viewport.getWorldWidth();
         float worldHeight = game.viewport.getWorldHeight();
-        float bucketWidth = bucketSprite.getWidth();
-        float bucketHeight = bucketSprite.getHeight();
+        float bucketWidth = potSprite.getWidth();
+        float bucketHeight = potSprite.getHeight();
         float delta = Gdx.graphics.getDeltaTime();
 
-        bucketSprite.setX(MathUtils.clamp(bucketSprite.getX(), 0, worldWidth - bucketWidth));
-        bucketRectangle.set(bucketSprite.getX(), bucketSprite.getY(), bucketWidth, bucketHeight);
+        potSprite.setX(MathUtils.clamp(potSprite.getX(), 0, worldWidth - bucketWidth));
+        potRectangle.set(potSprite.getX(), potSprite.getY(), bucketWidth, bucketHeight);
 
         for(int i = dropSprites.size - 1; i >= 0 ; i--){
             Sprite dropSprite = dropSprites.get(i);
@@ -115,28 +124,42 @@ public class GameScreen implements Screen {
             dropSprite.translateY(-2f*delta);
             dropRectangle.set(dropSprite.getX(), dropSprite.getY(), dropWidth, dropHeight);
 
-            /*
-            if(dropSprite.getY() < -dropHeight) dropSprites.removeIndex(i);
-            else if (bucketRectangle.overlaps(dropRectangle)){
+            if(potRectangle.overlaps(dropRectangle)) {
                 dropsGathered++;
                 dropSprites.removeIndex(i);
                 dropSound.play();
-            }
-             */
-            if(dropSprite.getY() < -dropHeight){
-                dropSprites.removeIndex(i);
-                misses++;
 
-                if(misses >= maxMisses){
+                if(hits > 0){
+                    hits--;
+                }
+            }
+            else if(dropSprite.getY() < -dropHeight) {
+                dropSprites.removeIndex(i);
+            }
+        }
+
+        for(int i = flameSprites.size - 1; i >= 0 ; i--) {
+            Sprite flameSprite = flameSprites.get(i);
+            float flameWidth = flameSprite.getWidth();
+            float flameHeight = flameSprite.getHeight();
+
+            flameSprite.translateY(-2.5f * delta);
+            flameRectangle.set(flameSprite.getX(), flameSprite.getY(), flameWidth, flameHeight);
+
+            if(potRectangle.overlaps(flameRectangle)) {
+                hits++;
+                flameSprites.removeIndex(i);
+                flameSound.play();
+
+                if(hits >= maxHits){
                     game.setScreen(new GameOverScreen(game, dropsGathered));
                     dispose();
                     return;
                 }
             }
-            else if(bucketRectangle.overlaps(dropRectangle)) {
-                dropsGathered++;
-                dropSprites.removeIndex(i);
-                dropSound.play();
+
+            else if(flameSprite.getY() < -flameHeight) {
+                flameSprites.removeIndex(i);
             }
         }
 
@@ -144,6 +167,12 @@ public class GameScreen implements Screen {
         if (dropTimer > 1f){
             dropTimer = 0;
             createDroplet();
+        }
+
+        flameTimer += delta;
+        if (flameTimer > 1.25f){
+            flameTimer = 0;
+            createFlame();
         }
     }
 
@@ -159,21 +188,25 @@ public class GameScreen implements Screen {
         float worldHeight = game.viewport.getWorldHeight();
 
         game.batch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
-        bucketSprite.draw(game.batch);
+        potSprite.draw(game.batch);
 
-        game.font.draw(game.batch, "Gotas recogidas: " + dropsGathered, 0, worldHeight);
-        game.font.draw(game.batch, "Fallos: "+ misses+ " de " + maxMisses, 0, worldHeight - 0.5f);
+        game.font.draw(game.batch, "Gotas recogidas: " + dropsGathered, 0.25f, worldHeight - 0.25f);
+        game.font.draw(game.batch, "Daño: "+ hits+ " de " + maxHits, 0.25f, worldHeight - 0.75f);
 
         for (Sprite dropSprite : dropSprites){
             dropSprite.draw(game.batch);
+        }
+
+        for (Sprite flameSprite : flameSprites){
+            flameSprite.draw(game.batch);
         }
 
         game.batch.end();
     }
 
     private void createDroplet() {
-        float dropWidth = 1;
-        float dropHeight = 1;
+        float dropWidth = 0.5f;
+        float dropHeight = 0.75f;
         float worldWidth = game.viewport.getWorldWidth();
         float worldHeight = game.viewport.getWorldHeight();
 
@@ -182,6 +215,19 @@ public class GameScreen implements Screen {
         dropSprite.setX(MathUtils.random(0f, worldWidth - dropWidth));
         dropSprite.setY(worldHeight);
         dropSprites.add(dropSprite);
+    }
+
+    private void createFlame() {
+        float flameWidth = 0.35f;
+        float flameHeight = 0.75f;
+        float worldWidth = game.viewport.getWorldWidth();
+        float worldHeight = game.viewport.getWorldHeight();
+
+        Sprite flameSprite = new Sprite(flameTexture);
+        flameSprite.setSize(flameWidth, flameHeight);
+        flameSprite.setX(MathUtils.random(0f, worldWidth - flameWidth));
+        flameSprite.setY(worldHeight);
+        flameSprites.add(flameSprite);
     }
 
     @Override
@@ -205,8 +251,10 @@ public class GameScreen implements Screen {
     public void dispose(){
         backgroundTexture.dispose();
         dropSound.dispose();
+        flameSound.dispose();
         music.dispose();
         dropTexture.dispose();
-        bucketTexture.dispose();
+        flameTexture.dispose();
+        potTexture.dispose();
     }
 }

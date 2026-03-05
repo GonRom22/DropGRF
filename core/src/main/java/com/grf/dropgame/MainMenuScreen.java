@@ -22,7 +22,7 @@ public class MainMenuScreen implements Screen {
 
         game.batch.begin();
         //Dibuja texto. Hay que recordar que x e y están en metros
-        game.font.draw(game.batch, "Bienvenidx a Drop: El Videojuego", 1, 1.5f);
+        game.font.draw(game.batch, "Bienvenidx a Drops Inferno", 1, 1.5f);
         game.font.draw(game.batch, "Clica para empezar :)", 1, 1);
         game.batch.end();
 
