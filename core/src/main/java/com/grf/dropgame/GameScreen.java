@@ -198,7 +198,8 @@ public class GameScreen implements Screen {
 
         game.font.draw(game.batch, "Gotas recogidas: " + dropsGathered, 0.25f, worldHeight - 0.25f);
         //game.font.draw(game.batch, "Daño: "+ hits+ " de " + maxHits, 0.25f, worldHeight - 0.75f);
-        float lifeSize = 0.20f;
+        float lifeWidth = 0.20f;
+        float lifeHeight = 0.25f;
         float startX = 0.25f;
         float y = worldHeight - 0.75f;
 
@@ -212,7 +213,7 @@ public class GameScreen implements Screen {
             }else{
                 texture = leafLostTexture;
             }
-            game.batch.draw(texture, startX + i * (lifeSize + 0.1f), y, lifeSize, lifeSize);
+            game.batch.draw(texture, startX + i * (lifeWidth + 0.1f), y, lifeWidth, lifeHeight);
         }
 
         for (Sprite dropSprite : dropSprites){
