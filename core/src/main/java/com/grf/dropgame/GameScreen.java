@@ -22,6 +22,8 @@ public class GameScreen implements Screen {
     Texture potTexture;
     Texture dropTexture;
     Texture flameTexture;
+    Texture leafTexture;
+    Texture leafLostTexture;
     //Sonidos
     Sound dropSound;
     Sound flameSound;
@@ -43,6 +45,8 @@ public class GameScreen implements Screen {
     int hits;
     int maxHits = 5;
 
+
+
     public GameScreen(final Drop game){
         this.game = game;
 
@@ -51,6 +55,8 @@ public class GameScreen implements Screen {
         potTexture = new Texture("potty.png");
         dropTexture = new Texture("drops.png");
         flameTexture = new Texture("flames.png");
+        leafTexture = new Texture("leaves.png");
+        leafLostTexture = new Texture("leavesLost.png");
 
         //Cargamos los sonidos y musica
         dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.mp3"));
@@ -191,7 +197,23 @@ public class GameScreen implements Screen {
         potSprite.draw(game.batch);
 
         game.font.draw(game.batch, "Gotas recogidas: " + dropsGathered, 0.25f, worldHeight - 0.25f);
-        game.font.draw(game.batch, "Daño: "+ hits+ " de " + maxHits, 0.25f, worldHeight - 0.75f);
+        //game.font.draw(game.batch, "Daño: "+ hits+ " de " + maxHits, 0.25f, worldHeight - 0.75f);
+        float lifeSize = 0.20f;
+        float startX = 0.25f;
+        float y = worldHeight - 0.75f;
+
+        int lives = maxHits - hits;
+
+        for(int i = 0; i < maxHits; i++){
+            Texture texture;
+
+            if(i < lives){
+                texture = leafTexture;
+            }else{
+                texture = leafLostTexture;
+            }
+            game.batch.draw(texture, startX + i * (lifeSize + 0.1f), y, lifeSize, lifeSize);
+        }
 
         for (Sprite dropSprite : dropSprites){
             dropSprite.draw(game.batch);
@@ -255,6 +277,8 @@ public class GameScreen implements Screen {
         music.dispose();
         dropTexture.dispose();
         flameTexture.dispose();
+        leafTexture.dispose();
+        leafLostTexture.dispose();
         potTexture.dispose();
     }
 }
